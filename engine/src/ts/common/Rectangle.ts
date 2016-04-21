@@ -33,12 +33,12 @@ export class Rectangle {
   contains (point: Vector, includeTopLeft: boolean = true, includeBottomRight: boolean = false) {
     return (
       includeTopLeft ?
-        this.topLeft.x <= point.x && this.topLeft.y <= point.y :
-        this.topLeft.x < point.x && this.topLeft.y < point.y
+      this.topLeft.x <= point.x && this.topLeft.y <= point.y :
+      this.topLeft.x < point.x && this.topLeft.y < point.y
     ) && (
       includeBottomRight ?
-        this.bottomRight.x >= point.x && this.bottomRight.y >= point.y :
-        this.bottomRight.x > point.x && this.bottomRight.y > point.y
+      this.bottomRight.x >= point.x && this.bottomRight.y >= point.y :
+      this.bottomRight.x > point.x && this.bottomRight.y > point.y
     );
   }
 }

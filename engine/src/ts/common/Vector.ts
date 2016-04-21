@@ -60,12 +60,12 @@ export class Vector {
 
   directionTo (vector2: Vector): Vector {
     return vector2.subtract(this)
-      .divide(this.distance(vector2));
+    .divide(this.distance(vector2));
   }
 
   /**
-   * 0 <= radians < 2 * pi
-   */
+  * 0 <= radians < 2 * pi
+  */
   toRadians (): number {
     let radians = Math.atan2(this.y, this.x);
 

@@ -27,18 +27,18 @@ export class World {
   }
 
   start () {
-  	this.antHill = new AntHill(
+    this.antHill = new AntHill(
       CONFIG.ANTHILL.POSITION.round(),
-  		CONFIG.ANTHILL.RADIUS
+      CONFIG.ANTHILL.RADIUS
     );
 
-  	for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
-  		this.ants.push(new Ant(this.antHill.position));
-  	}
+    for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
+      this.ants.push(new Ant(this.antHill.position));
+    }
   }
 
   createFood (force: boolean = false) {
-  	let newFoods: Array<Food> = this.foodFactory.create(force);
+    let newFoods: Array<Food> = this.foodFactory.create(force);
     newFoods.forEach((food: Food) => this.foods.push(food));
   }
 
@@ -49,10 +49,10 @@ export class World {
   step () {
     this.ants.forEach((ant: Ant) => ant.step(this));
 
-  	this.pheromoneGrid.dissipate();
+    this.pheromoneGrid.dissipate();
 
-  	if (this.autoCreateFood) {
-  		this.createFood();
-  	}
+    if (this.autoCreateFood) {
+      this.createFood();
+    }
   }
 }
