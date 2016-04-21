@@ -42,5 +42,5 @@ Configuration parameters can be found in the `engine/src/ts/Config.ts` file.
 - Immutables
 - RxJS
 - Hooks/Events?
-- UI
+- React UI?
 - Unit tests
