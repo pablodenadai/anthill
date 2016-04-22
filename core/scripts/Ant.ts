@@ -31,13 +31,9 @@ export class Ant {
   }
 
   findFood (foods: Array<Food>): Food {
-    foods.forEach((food: Food) => {
-      if (food && food.isOnGround && this.position.distance(food.position) < food.radius) {
-        return food;
-      }
-    });
-
-    return null;
+    return foods.filter((food: Food) => {
+      return (food && food.isOnGround && this.position.distance(food.position) < food.radius);
+    }).shift();
   }
 
   isAtAntHill (antHill): boolean {
@@ -70,10 +66,6 @@ export class Ant {
 
   isCarryingFood (): boolean {
     return !!this.carriedFood;
-  }
-
-  setRandomDirection () {
-    this.direction = Vector.randomUnitVector();
   }
 
   /**
@@ -154,7 +146,6 @@ export class Ant {
 
       if (this.isAtAntHill(world.antHill)) {
         world.removeFood(this.dropFood());
-        this.setRandomDirection();
       }	else {
         if (this.isNextToAntHill(world.antHill)) {
           newDirection = this.position.directionTo(world.antHill.position);
@@ -166,7 +157,7 @@ export class Ant {
 
         world.pheromoneGrid.add(this.position);
       }
-    }	else {
+    } else {
       let food = this.findFood(world.foods);
 
       if (food) {
@@ -188,10 +179,38 @@ export class Ant {
       newDirection = this.position.directionTo(world.antHill.position);
     }
 
-    if (newDirection !== null && this.turnRationally()) {
+    if (newDirection && this.turnRationally()) {
       this.direction = newDirection;
     }	else {
       this.turnRandomly();
     }
+  }
+
+  /**
+   * @deprecated
+   */
+  getText () {
+  	return 'a';
+  }
+
+  /**
+   * @deprecated
+   */
+  getColour () {
+  	return 'black';
+  }
+
+  /**
+   * @deprecated
+   */
+  getZIndex () {
+  	return 5;
+  }
+
+  /**
+   * @deprecated
+   */
+  getPosition () {
+    return this.position;
   }
 }

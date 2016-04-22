@@ -15,15 +15,9 @@ export class World {
   public foodFactory: FoodFactory;
   public rectangle: Rectangle;
   public pheromoneGrid: PheromoneGrid;
-  public autoCreateFood: boolean;
 
   constructor () {
     this.rectangle = CONFIG.WORLD.RECTANGLE;
-    this.pheromoneGrid = new PheromoneGrid(this.rectangle);
-    this.foodFactory = new FoodFactory();
-
-    // start without food, just for ants to walk out from the anthill
-    this.autoCreateFood = false;
   }
 
   start () {
@@ -32,6 +26,12 @@ export class World {
       CONFIG.ANTHILL.RADIUS
     );
 
+    this.pheromoneGrid = new PheromoneGrid(this.rectangle);
+
+    this.foods = [];
+    this.foodFactory = new FoodFactory();
+
+    this.ants = [];
     for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
       this.ants.push(new Ant(this.antHill.position));
     }
@@ -48,11 +48,18 @@ export class World {
 
   step () {
     this.ants.forEach((ant: Ant) => ant.step(this));
-
     this.pheromoneGrid.dissipate();
-
-    if (this.autoCreateFood) {
-      this.createFood();
-    }
   }
+
+  /**
+   * @deprecated
+   */
+  elements () {
+    return [...this.ants, this.antHill, ...this.foods, ...this.pheromoneGrid.getPheromones()];
+  }
+
+  /**
+   * @deprecated
+   */
+  destroy () { }
 }

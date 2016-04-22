@@ -1,2 +1,4 @@
-engine/src/js
-ui/src/js
+node_modules
+typings
+build
+.sass-cache

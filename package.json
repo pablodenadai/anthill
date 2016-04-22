@@ -1,0 +1,27 @@
+{
+  "name": "anthill",
+  "version": "1.0.0",
+  "description": "A naive ant colony simulation.",
+  "main": "index.js",
+  "scripts": {
+    "browserify": "browserify client/scripts/Main.ts -s app -p tsify -d -o build/client/bundle.js",
+    "sass": "sass --update client/scss:build/client/css",
+
+    "build": "npm run browserify && npm run sass",
+    "listen": "http-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ghpabs/anthill.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ghpabs/anthill/issues"
+  },
+  "homepage": "https://github.com/ghpabs/anthill#readme",
+  "devDependencies": {
+    "browserify": "13.0.0",
+    "tsify": "0.15.2"
+  }
+}

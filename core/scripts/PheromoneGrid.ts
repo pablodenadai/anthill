@@ -15,6 +15,8 @@ export class PheromoneGrid {
     let width = this.rectangle.width();
     let height = this.rectangle.height();
 
+    this.grid = [];
+
     for (let i = 0; i < width; i++) {
       this.grid[i] = [];
 
