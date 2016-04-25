@@ -39,8 +39,14 @@ Configuration parameters can be found in the `engine/src/ts/Config.ts` file.
 - [Ants](http://www.enviee.com/joel/ants/) by Joel Schulbach [[Reddit thread](https://www.reddit.com/r/javascript/comments/2r6gzk/javascript_canvas_ant_simulator/)]
 
 ## TODO
-- Immutables
-- RxJS
-- Hooks/Events?
-- React UI?
+
+#### Known Issues
+- Ants get stuck in pheromone
+- Ants should always leave pheromone track
+- Ants should follow pheromone back to anthill
+
+#### Features
+- Immutables + RxJS
+- Hooks/Events
+- React UI
 - Unit tests
