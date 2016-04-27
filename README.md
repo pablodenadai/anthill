@@ -23,6 +23,22 @@ they just walk randomly.
 
 Configuration parameters can be found in the `engine/src/ts/Config.ts` file.
 
+## Rethinking the rules
+
+> WIP
+
+- Each ant has 2 sensing points to act as the antenna
+  - Ant checks the strength of the trail at each of those sensors
+    - If the left is stronger than the right, then it turns left, if the right is stronger, turn right, if they are the same go straight
+  - If there is no trail at each antenna, the ant will go straight, and randomly turn every so often
+- Each ant has one point in the middle that acts as the "mouth"
+  - The mouth sensor is always checking for food at it's position
+    - If the ant hits a food source, it eats, then grabs food and turns 180 degrees and begins to move straight which should follow the trail it laid when finding the food
+- If the ants position matches the colony hole, it drops the food it's carrying
+- If enough food is gathered new ants are born
+
+There are a few other small rules like an ant won't turn left or right too many times in a row because it will cause them to get stuck in a spiral.
+
 ## Resources
 
 #### Books
