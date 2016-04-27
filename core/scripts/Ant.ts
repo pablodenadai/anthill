@@ -15,32 +15,24 @@ export class Ant {
     this.direction = Vector.randomUnitVector();
   }
 
-  isOnPheromone (pheromoneGrid: PheromoneGrid) {
-    return pheromoneGrid.get(this.position) > 0;
+  isAtAntHill (antHill: AntHill): boolean {
+    return this.position.distance(antHill.position) < antHill.radius;
   }
 
-  turnaround () {
-    return this.direction.rotate(Math.PI);
+  isOnPheromone (pheromoneGrid: PheromoneGrid) {
+    return pheromoneGrid.get(this.position) > 0;
   }
 
   releasePheromone (pheromoneGrid: PheromoneGrid) {
     return pheromoneGrid.add(this.position);
   }
 
-  releaseStrongPheromone (pheromoneGrid: PheromoneGrid) {
+  releaseStrongerPheromone (pheromoneGrid: PheromoneGrid) {
     return pheromoneGrid.add(this.position, CONFIG.PHEROMONE.MULTIPLIER);
   }
 
-  /**
-  * Will the ant turn according to rules, or just randomly?
-  */
-  turnRationally (): boolean {
-    return Math.random() < CONFIG.ANT.RATIONALITY;
-  }
-
-  getRandomRotation (): Vector {
-    let rotation = Math.random() * 2 * CONFIG.ANT.MAX_ROTATION - CONFIG.ANT.MAX_ROTATION;
-    return this.direction.rotate(rotation);
+  isCarryingFood (): boolean {
+    return !!this.carriedFood;
   }
 
   findFood (foods: Array<Food>): Food {
@@ -48,14 +40,6 @@ export class Ant {
       return (food && food.isOnGround && this.position.distance(food.position) < food.radius);
     }).shift();
   }
-
-  isAtAntHill (antHill: AntHill): boolean {
-    return this.position.distance(antHill.position) < antHill.radius;
-  }
-
-  // isNextToAntHill (antHill): boolean {
-  //   return this.position.distance(antHill.position) < (antHill.radius + 1);
-  // }
 
   pickUpFood (food: Food) {
     if (this.carriedFood) {
@@ -77,15 +61,22 @@ export class Ant {
     return food;
   }
 
-  isCarryingFood (): boolean {
-    return !!this.carriedFood;
+  canTurnRationally (): boolean {
+    return Math.random() < CONFIG.ANT.RATIONALITY;
   }
 
+  getRandomRotation (): Vector {
+    let rotation = Math.random() * 2 * CONFIG.ANT.MAX_ROTATION - CONFIG.ANT.MAX_ROTATION;
+    return this.direction.rotate(rotation);
+  }
+
+  // turnaround () {
+  //   return this.direction.rotate(Math.PI);
+  // }
+
   /**
-  * Sense a pheromone in an arc of 3/8 * pi radians in direction,
-  * right in front of the ant.
-  * Returns the direction of the found pheromone, as a vector, or
-  * null if none were found.
+  * Sense a pheromone in an arc of 3/8 * pi radians in direction, right in front of the ant.
+  * Returns the direction of the found pheromone, as a vector, or null if none were found ? TODO.
   * If there are more than one, return the direction of the strongest.
   */
   sensePheromoneInDirection (pheromoneGrid: PheromoneGrid, direction: Vector): Vector {
@@ -107,55 +98,11 @@ export class Ant {
     return Vector.fromRadians(strongestDirection);
   }
 
-  // /**
-  // * Sense pheromone by "looking" in eight directions.
-  // * Return the direction that has the most pheromones in it.
-  // * All pheromones are equally weighted (strength not taken
-  // * into consideration), but the fact that coverage is decreasing
-  // * exponentially the further out from the ant you get
-  // * effectively means that pheromone further away is less
-  // * important.
-  // * Returns a vector or null.
-  // *
-  // * @deprecated Do not use
-  // */
-  // senseDistantPheromone (pheromoneGrid): Vector {
-  //   let directionStrengths = [0, 0, 0, 0, 0, 0, 0, 0];
-  //
-  //   for (let length = 0; length < CONFIG.ANT.SENSE_DISTANCE; length ++) {
-  //     for (let direction = 0; direction < 8; direction ++) {
-  //       let radians = direction * 2 * Math.PI / 8;
-  //       let point = this.position.add(Vector.fromRadians(radians, length)).round();
-  //
-  //       directionStrengths[direction] += pheromoneGrid.get(point);
-  //     }
-  //   }
-  //
-  //   let strongestDirection = null;
-  //   let strongestStrength = 0;
-  //
-  //   for (let i = 0; i < 8; i++) {
-  //     if (directionStrengths[i] > strongestStrength) {
-  //       strongestDirection = i;
-  //       strongestStrength = directionStrengths[i];
-  //     }
-  //   }
-  //
-  //   if (strongestDirection === null) {
-  //     return null;
-  //   }
-  //
-  //   return Vector.fromRadians(strongestDirection * 2 * Math.PI / 8);
-  // }
-
-  /**
-  * Apply the rules described in README.
-  */
   step (world: World) {
     let newDirection: Vector;
 
     if (this.isCarryingFood()) {
-      this.releaseStrongPheromone(world.pheromoneGrid);
+      this.releaseStrongerPheromone(world.pheromoneGrid);
 
       if (this.isAtAntHill(world.antHill)) {
         world.removeFood(this.dropFood());
@@ -179,7 +126,7 @@ export class Ant {
       // go straight ahead
     }
 
-    if (!this.turnRationally()) {
+    if (!this.canTurnRationally()) {
       newDirection = this.getRandomRotation();
     }
 
