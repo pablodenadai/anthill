@@ -11,8 +11,8 @@ export class Main {
 
   constructor() {
     this.init();
-    this.start();
-    // $('#startAnts').click(() => );
+
+    $('#startAnts').click(this.start.bind(this));
   }
 
   init () {

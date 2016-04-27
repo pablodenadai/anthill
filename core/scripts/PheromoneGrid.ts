@@ -41,9 +41,9 @@ export class PheromoneGrid {
     }
   }
 
-  add (point: Vector) {
+  add (point: Vector, multiplier: number = 1) {
     if (this.rectangle.contains(point)) {
-      this.grid[point.x][point.y] += CONFIG.PHEROMONE.STRENGTH;
+      this.grid[point.x][point.y] += CONFIG.PHEROMONE.STRENGTH * multiplier;
     }
   }
 
@@ -66,7 +66,7 @@ export class PheromoneGrid {
 
     for (let i = 0; i < width; i++) {
       for (let j = 0; j < height; j++) {
-        if(this.grid[i][j] > 0) {
+        if (this.grid[i][j] > 0) {
           pheromones.push(new Pheromone(new Vector(i, j), this.grid[i][j]));
         }
       }

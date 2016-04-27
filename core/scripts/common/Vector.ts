@@ -85,7 +85,7 @@ export class Vector {
 
   static up = new Vector(0, -1);
   static right = new Vector(1, 0);
-  static down = new Vector(0, 1)
+  static down = new Vector(0, 1);
   static left = new Vector(-1, 0);
 
   static randomUnitVector () {

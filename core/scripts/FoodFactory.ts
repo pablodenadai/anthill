@@ -34,6 +34,6 @@ export class FoodFactory {
       }
     }
 
-    return foods
+    return foods;
   }
 }

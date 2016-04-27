@@ -2,6 +2,7 @@ import { Vector } from './common/Vector';
 
 import { Food } from './Food';
 import { PheromoneGrid } from './PheromoneGrid';
+import { AntHill } from './AntHill';
 import { World } from './World';
 
 import { CONFIG } from './Config';
@@ -18,6 +19,18 @@ export class Ant {
     return pheromoneGrid.get(this.position) > 0;
   }
 
+  turnaround () {
+    return this.direction.rotate(Math.PI);
+  }
+
+  releasePheromone (pheromoneGrid: PheromoneGrid) {
+    return pheromoneGrid.add(this.position);
+  }
+
+  releaseStrongPheromone (pheromoneGrid: PheromoneGrid) {
+    return pheromoneGrid.add(this.position, CONFIG.PHEROMONE.MULTIPLIER);
+  }
+
   /**
   * Will the ant turn according to rules, or just randomly?
   */
@@ -25,9 +38,9 @@ export class Ant {
     return Math.random() < CONFIG.ANT.RATIONALITY;
   }
 
-  turnRandomly () {
+  getRandomRotation (): Vector {
     let rotation = Math.random() * 2 * CONFIG.ANT.MAX_ROTATION - CONFIG.ANT.MAX_ROTATION;
-    this.direction = this.direction.rotate(rotation);
+    return this.direction.rotate(rotation);
   }
 
   findFood (foods: Array<Food>): Food {
@@ -36,13 +49,13 @@ export class Ant {
     }).shift();
   }
 
-  isAtAntHill (antHill): boolean {
+  isAtAntHill (antHill: AntHill): boolean {
     return this.position.distance(antHill.position) < antHill.radius;
   }
 
-  isNextToAntHill (antHill): boolean {
-    return this.position.distance(antHill.position) < (antHill.radius + 1);
-  }
+  // isNextToAntHill (antHill): boolean {
+  //   return this.position.distance(antHill.position) < (antHill.radius + 1);
+  // }
 
   pickUpFood (food: Food) {
     if (this.carriedFood) {
@@ -79,14 +92,14 @@ export class Ant {
     let strongestDirection: number = 0;
     let strongestStrength: number = 0;
 
-    let forward = direction.toRadians()
+    let forward = direction.toRadians();
 
     for (let radians = forward - Math.PI / 8; radians <= forward + Math.PI / 8; radians += Math.PI / 8) {
       let point = this.position.add(Vector.fromRadians(radians)).round();
       let strength = pheromoneGrid.get(point);
 
       if (strength > strongestStrength) {
-        strongestStrength = strength
+        strongestStrength = strength;
         strongestDirection = radians;
       }
     }
@@ -94,44 +107,46 @@ export class Ant {
     return Vector.fromRadians(strongestDirection);
   }
 
-  /**
-  * Sense pheromone by "looking" in eight directions.
-  * Return the direction that has the most pheromones in it.
-  * All pheromones are equally weighted (strength not taken
-  * into consideration), but the fact that coverage is decreasing
-  * exponentially the further out from the ant you get
-  * effectively means that pheromone further away is less
-  * important.
-  * Returns a vector or null.
-  */
-  senseDistantPheromone (pheromoneGrid): Vector {
-    let directionStrengths = [0, 0, 0, 0, 0, 0, 0, 0];
-
-    for (let length = 0; length < CONFIG.ANT.SENSE_DISTANCE; length ++) {
-      for (let direction = 0; direction < 8; direction ++) {
-        let radians = direction * 2 * Math.PI / 8;
-        let point = this.position.add(Vector.fromRadians(radians, length)).round();
-
-        directionStrengths[direction] += pheromoneGrid.get(point);
-      }
-    }
-
-    let strongestDirection = null;
-    let strongestStrength = 0;
-
-    for (let i = 0; i < 8; i++) {
-      if (directionStrengths[i] > strongestStrength) {
-        strongestDirection = i;
-        strongestStrength = directionStrengths[i];
-      }
-    }
-
-    if (strongestDirection === null) {
-      return null;
-    }
-
-    return Vector.fromRadians(strongestDirection * 2 * Math.PI / 8);
-  }
+  // /**
+  // * Sense pheromone by "looking" in eight directions.
+  // * Return the direction that has the most pheromones in it.
+  // * All pheromones are equally weighted (strength not taken
+  // * into consideration), but the fact that coverage is decreasing
+  // * exponentially the further out from the ant you get
+  // * effectively means that pheromone further away is less
+  // * important.
+  // * Returns a vector or null.
+  // *
+  // * @deprecated Do not use
+  // */
+  // senseDistantPheromone (pheromoneGrid): Vector {
+  //   let directionStrengths = [0, 0, 0, 0, 0, 0, 0, 0];
+  //
+  //   for (let length = 0; length < CONFIG.ANT.SENSE_DISTANCE; length ++) {
+  //     for (let direction = 0; direction < 8; direction ++) {
+  //       let radians = direction * 2 * Math.PI / 8;
+  //       let point = this.position.add(Vector.fromRadians(radians, length)).round();
+  //
+  //       directionStrengths[direction] += pheromoneGrid.get(point);
+  //     }
+  //   }
+  //
+  //   let strongestDirection = null;
+  //   let strongestStrength = 0;
+  //
+  //   for (let i = 0; i < 8; i++) {
+  //     if (directionStrengths[i] > strongestStrength) {
+  //       strongestDirection = i;
+  //       strongestStrength = directionStrengths[i];
+  //     }
+  //   }
+  //
+  //   if (strongestDirection === null) {
+  //     return null;
+  //   }
+  //
+  //   return Vector.fromRadians(strongestDirection * 2 * Math.PI / 8);
+  // }
 
   /**
   * Apply the rules described in README.
@@ -139,51 +154,97 @@ export class Ant {
   step (world: World) {
     let newDirection: Vector;
 
-    this.position = this.position.add(this.direction).round();
-
     if (this.isCarryingFood()) {
-      this.carriedFood.position = this.position;
+      this.releaseStrongPheromone(world.pheromoneGrid);
 
       if (this.isAtAntHill(world.antHill)) {
         world.removeFood(this.dropFood());
-      }	else {
-        if (this.isNextToAntHill(world.antHill)) {
-          newDirection = this.position.directionTo(world.antHill.position);
-        }	else if (this.isOnPheromone(world.pheromoneGrid)) {
-          newDirection = this.sensePheromoneInDirection(world.pheromoneGrid, this.position.directionTo(world.antHill.position));
-        } else {
-          newDirection = this.position.directionTo(world.antHill.position);
-        }
-
-        world.pheromoneGrid.add(this.position);
+        newDirection = this.getRandomRotation();
+      } else if (this.isOnPheromone(world.pheromoneGrid)) {
+        // review this - direction ?
+        newDirection = this.sensePheromoneInDirection(world.pheromoneGrid, this.direction);
       }
     } else {
-      let food = this.findFood(world.foods);
+      this.releasePheromone(world.pheromoneGrid);
 
+      let food = this.findFood(world.foods);
       if (food) {
         this.pickUpFood(food);
-        this.position = food.position;
-
-        world.pheromoneGrid.add(this.position);
-        newDirection = this.position.directionTo(world.antHill.position);
-      }	else {
-        if (this.isOnPheromone(world.pheromoneGrid)) {
-          newDirection = this.sensePheromoneInDirection(world.pheromoneGrid, this.direction);
-        } else {
-          newDirection = this.senseDistantPheromone(world.pheromoneGrid);
-        }
+        // newDirection = this.getPrevious();
+        // go back
       }
     }
 
-    if (!world.rectangle.contains(this.position, false, false)) {
+    if (!newDirection) {
+      // go straight ahead
+    }
+
+    if (!this.turnRationally()) {
+      newDirection = this.getRandomRotation();
+    }
+
+    if (!world.rectangle.contains(this.position)) {
       newDirection = this.position.directionTo(world.antHill.position);
     }
 
-    if (newDirection && this.turnRationally()) {
-      this.direction = newDirection;
-    }	else {
-      this.turnRandomly();
+
+    this.direction = newDirection;
+    this.position = this.position
+      .add(this.direction)
+      .round();
+
+    if (this.isCarryingFood()) {
+      this.carriedFood.position = this.position;
     }
+
+
+    // let newDirection: Vector;
+    //
+    // this.position = this.position.add(this.direction).round();
+    //
+    // if (this.isCarryingFood()) {
+    //   this.carriedFood.position = this.position;
+    //
+    //   if (this.isAtAntHill(world.antHill)) {
+    //     world.removeFood(this.dropFood());
+    //   }	else {
+    //     if (this.isNextToAntHill(world.antHill)) {
+    //       newDirection = this.position.directionTo(world.antHill.position);
+    //     }	else if (this.isOnPheromone(world.pheromoneGrid)) {
+    //       newDirection = this.sensePheromoneInDirection(world.pheromoneGrid, this.position.directionTo(world.antHill.position));
+    //     } else {
+    //       newDirection = this.position.directionTo(world.antHill.position);
+    //     }
+    //
+    //     world.pheromoneGrid.add(this.position);
+    //   }
+    // } else {
+    //   let food = this.findFood(world.foods);
+    //
+    //   if (food) {
+    //     this.pickUpFood(food);
+    //     this.position = food.position;
+    //
+    //     world.pheromoneGrid.add(this.position);
+    //     newDirection = this.position.directionTo(world.antHill.position);
+    //   }	else {
+    //     if (this.isOnPheromone(world.pheromoneGrid)) {
+    //       newDirection = this.sensePheromoneInDirection(world.pheromoneGrid, this.direction);
+    //     } else {
+    //       newDirection = this.senseDistantPheromone(world.pheromoneGrid);
+    //     }
+    //   }
+    // }
+    //
+    // if (!world.rectangle.contains(this.position, false, false)) {
+    //   newDirection = this.position.directionTo(world.antHill.position);
+    // }
+    //
+    // if (newDirection && this.turnRationally()) {
+    //   this.direction = newDirection;
+    // }	else {
+    //   this.turnRandomly();
+    // }
   }
 
   /**

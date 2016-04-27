@@ -30,7 +30,7 @@ export class Rectangle {
     return this.width() * this.height();
   }
 
-  contains (point: Vector, includeTopLeft: boolean = true, includeBottomRight: boolean = false) {
+  contains (point: Vector, includeTopLeft: boolean = false, includeBottomRight: boolean = false) {
     return (
       includeTopLeft ?
       this.topLeft.x <= point.x && this.topLeft.y <= point.y :

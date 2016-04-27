@@ -14,7 +14,7 @@ export class Pheromone {
    * @deprecated
    */
   getColour () {
-  	var strength = Math.max(1 - this.strength * .4, 0);
+  	let strength = Math.max(1 - this.strength * .4, 0);
 
   	return `rgb(237, ${Math.round(strength * 218)}, ${Math.round(strength * 164)})`;
   }

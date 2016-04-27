@@ -19,7 +19,7 @@ export class Controller {
 				this.view.draw(this.model.elements());
 				this.onComplete();
 			}
-		}
+		};
 	}
 
 	start () {

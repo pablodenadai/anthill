@@ -14,14 +14,14 @@ export class Food {
    * @deprecated
    */
   getText () {
-  	return "f";
+  	return 'f';
   }
 
   /**
    * @deprecated
    */
   getColour () {
-  	return "green";
+  	return 'green';
   }
 
   /**

@@ -27,10 +27,10 @@ Configuration parameters can be found in the `engine/src/ts/Config.ts` file.
 
 > WIP
 
-- Each ant has 2 sensing points to act as the antenna
-  - Ant checks the strength of the trail at each of those sensors
-    - If the left is stronger than the right, then it turns left, if the right is stronger, turn right, if they are the same go straight
-  - If there is no trail at each antenna, the ant will go straight, and randomly turn every so often
+- OK (use radians) Each ant has 2 sensing points to act as the antenna
+  - OK (use radians) Ant checks the strength of the trail at each of those sensors
+    - OK (use radians) If the left is stronger than the right, then it turns left, if the right is stronger, turn right, if they are the same go straight
+  - OK (use radians) If there is no trail at each antenna, the ant will go straight, and randomly turn every so often
 - Each ant has one point in the middle that acts as the "mouth"
   - The mouth sensor is always checking for food at it's position
     - If the ant hits a food source, it eats, then grabs food and turns 180 degrees and begins to move straight which should follow the trail it laid when finding the food
@@ -62,7 +62,8 @@ There are a few other small rules like an ant won't turn left or right too many 
 - Ants should follow pheromone back to anthill
 
 #### Features
-- Immutables + RxJS
+- Immutables + Redux + RxJS
 - Hooks/Events
 - React UI
 - Unit tests
+- Speed
