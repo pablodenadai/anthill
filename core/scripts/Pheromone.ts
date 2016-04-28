@@ -1,26 +1,24 @@
+import { Entity } from './common/Entity';
 import { Vector } from './common/Vector';
 
 import { CONFIG } from './Config';
 
-export class Pheromone {
-  constructor (public position: Vector, public strength: number) {}
+export class Pheromone extends Entity {
+  constructor (protected position: Vector, protected radius: number, public strength: number) {
+    super(position, radius);
+  }
 
-  dissipate () {
+  dissipate (): number {
     this.strength -= CONFIG.PHEROMONE.DISSIPATION_RATE;
     if (this.strength < CONFIG.PHEROMONE.DISAPPEAR_THRESHOLD) {
       this.strength = 0;
     }
+
+    return this.strength;
   }
 
   add (strength: number) {
     this.strength += strength;
-  }
-
-  /**
-   * @deprecated
-   */
-  getText () {
-  	return '●'; // this.strength.toFixed(0);
   }
 
   /**
@@ -39,12 +37,5 @@ export class Pheromone {
    */
   getZIndex () {
   	return 1;
-  }
-
-  /**
-   * @deprecated
-   */
-  getPosition () {
-    return this.position;
   }
 }

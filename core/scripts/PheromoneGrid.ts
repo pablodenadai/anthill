@@ -7,144 +7,39 @@ import { CONFIG } from './Config';
 export class PheromoneGrid {
   public grid: Array<Pheromone>;
 
-  /**
-  * Pheromones are represented as values on a grid. The higher
-  * the value, the stronger the pheromone at that particular square.
-  */
   constructor () {
     this.grid = [];
   }
 
   dissipate () {
-    this.grid.forEach((pheromone: Pheromone) => { pheromone.dissipate(); });
+    this.grid = this.grid.filter((pheromone: Pheromone) => {
+      let strength: number = pheromone.dissipate();
+      return strength > 0;
+    });
   }
 
   add (point: Vector, multiplier: number = 1) {
     let strength = CONFIG.PHEROMONE.STRENGTH * multiplier;
-    this.get(point).add(strength);
+
+    let pheromone =
+      this.findPheromone(point, 1) ||
+      this.createPheromone(point);
+    pheromone.add(strength);
+
+    this.grid.push(pheromone);
   }
 
-  get (point: Vector): Pheromone {
-    let pheromone: Pheromone = this.grid.filter((pheromone: Pheromone) => {
-      return pheromone.position.equals(point);
-    })[0];
-
-    return pheromone || new Pheromone(point, 0);
+  createPheromone (point: Vector): Pheromone {
+    return new Pheromone(point, CONFIG.PHEROMONE.RADIUS, 0);
   }
 
-  /**
-  * Return pheromones for rendering
-  */
+  findPheromone (position: Vector, radius): Pheromone {
+    return this.grid.filter((pheromone: Pheromone) => {
+      return (pheromone && position.distance(pheromone.getPosition()) < radius);
+    }).shift();
+  }
+
   getPheromones (): Array<Pheromone> {
     return this.grid;
   }
-
-  // isEmpty (): boolean {
-  //   let width = this.rectangle.width();
-  //   let height = this.rectangle.height();
-  //
-  //   for (let i = 0; i <= width; i++) {
-  //     for (let j = 0; j <= height; j++) {
-  //       if (this.grid[i][j] > 0) {
-  //         return false;
-  //       }
-  //     }
-  //   }
-  //
-  //   return true;
-  // }
 }
-
-
-// import { Rectangle } from './common/Rectangle';
-// import { Vector } from './common/Vector';
-// import { Pheromone } from './Pheromone';
-//
-// import { CONFIG } from './Config';
-//
-// export class PheromoneGrid {
-//   public grid: Array<Array<number>>;
-//
-//   /**
-//   * Pheromones are represented as values on a grid. The higher
-//   * the value, the stronger the pheromone at that particular square.
-//   */
-//   constructor (public rectangle: Rectangle) {
-//     let width = this.rectangle.width();
-//     let height = this.rectangle.height();
-//
-//     this.grid = [];
-//
-//     for (let i = 0; i <= width; i++) {
-//       this.grid[i] = [];
-//
-//       for (let j = 0; j <= height; j++) {
-//         this.grid[i][j] = 0;
-//       }
-//     }
-//   }
-//
-//   dissipate () {
-//     let width = this.rectangle.width();
-//     let height = this.rectangle.height();
-//
-//     for (let i = 0; i <= width; i++) {
-//       for (let j = 0; j <= height; j++) {
-//         this.grid[i][j] -= CONFIG.PHEROMONE.DISSIPATION_RATE;
-//
-//         if (this.grid[i][j] < CONFIG.PHEROMONE.DISAPPEAR_THRESHOLD) {
-//           this.grid[i][j] = 0;
-//         }
-//       }
-//     }
-//   }
-//
-//   add (point: Vector, multiplier: number = 1) {
-//     if (this.rectangle.contains(point)) {
-//       this.grid[point.x][point.y] += CONFIG.PHEROMONE.STRENGTH * multiplier;
-//     }
-//   }
-//
-//   get (point: Vector): number {
-//     if (this.rectangle.contains(point)) {
-//       return this.grid[point.x][point.y];
-//     }
-//
-//     return 0;
-//   }
-//
-//   /**
-//   * Return pheromones for rendering
-//   */
-//   getPheromones (): Array<Pheromone> {
-//     let pheromones = Array<Pheromone>();
-//
-//     let width = this.rectangle.width();
-//     let height = this.rectangle.height();
-//
-//     for (let i = 0; i <= width; i++) {
-//       for (let j = 0; j <= height; j++) {
-//         if (this.grid[i][j] > 0) {
-//           pheromones.push(new Pheromone(new Vector(i, j), this.grid[i][j]));
-//         }
-//       }
-//     }
-//
-//     return pheromones;
-//   }
-//
-//   // isEmpty (): boolean {
-//   //   let width = this.rectangle.width();
-//   //   let height = this.rectangle.height();
-//   //
-//   //   for (let i = 0; i <= width; i++) {
-//   //     for (let j = 0; j <= height; j++) {
-//   //       if (this.grid[i][j] > 0) {
-//   //         return false;
-//   //       }
-//   //     }
-//   //   }
-//   //
-//   //   return true;
-//   // }
-// }

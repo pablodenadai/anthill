@@ -16,6 +16,7 @@
   "files": [
     "core/scripts/Ant.ts",
     "core/scripts/AntHill.ts",
+    "core/scripts/common/Entity.ts",
     "core/scripts/common/Rectangle.ts",
     "core/scripts/common/Vector.ts",
     "core/scripts/Config.ts",

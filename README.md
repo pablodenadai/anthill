@@ -66,4 +66,8 @@ There are a few other small rules like an ant won't turn left or right too many 
 - Hooks/Events
 - React UI
 - Unit tests
-- Speed
+- Ant Speed
+- 60fps
+- Sort out config obj
+- food spread ? multiply ?
+- food list and pheromone list

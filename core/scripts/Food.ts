@@ -1,20 +1,16 @@
+import { Entity } from './common/Entity';
 import { Vector } from './common/Vector';
 
 /**
 * Created by food factory class.
 */
-export class Food {
+export class Food extends Entity {
   public isOnGround: boolean = false;
 
-  constructor (public position: Vector, public radius: number) {
-    this.isOnGround = true;
-  }
+  constructor (protected position: Vector, public radius: number) {
+    super(position, radius);
 
-  /**
-   * @deprecated
-   */
-  getText () {
-  	return 'f';
+    this.isOnGround = true;
   }
 
   /**
@@ -29,12 +25,5 @@ export class Food {
    */
   getZIndex () {
   	return 7;
-  }
-
-  /**
-   * @deprecated
-   */
-  getPosition () {
-    return this.position;
   }
 }

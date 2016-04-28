@@ -1,13 +1,16 @@
+import { Entity } from './common/Entity';
 import { Vector } from './common/Vector';
 
-export class AntHill {
-  constructor (public position: Vector, public radius: number) {}
+export class AntHill extends Entity {
+  constructor (protected position: Vector, public radius: number) {
+    super(position, radius);
+  }
 
   /**
    * @deprecated
    */
   getText () {
-  	return 'H';
+  	return '●';
   }
 
   /**
@@ -22,12 +25,5 @@ export class AntHill {
    */
   getZIndex () {
   	return 3;
-  }
-
-  /**
-   * @deprecated
-   */
-  getPosition () {
-    return this.position;
   }
 }

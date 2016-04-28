@@ -22,8 +22,8 @@ export class Main {
       this.world.createFood(true);
     }
 
-    this.view = new View('ants', 10);
-    this.controller = new Controller(this.world, this.view, 10);
+    this.view = new View('ants', 1);
+    this.controller = new Controller(this.world, this.view, 60);
   }
 
   start () {

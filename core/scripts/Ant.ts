@@ -1,28 +1,33 @@
+import { Entity } from './common/Entity';
 import { Vector } from './common/Vector';
 
 import { Food } from './Food';
+import { Pheromone } from './Pheromone';
 import { PheromoneGrid } from './PheromoneGrid';
 import { AntHill } from './AntHill';
 import { World } from './World';
 
 import { CONFIG } from './Config';
 
-export class Ant {
+export class Ant extends Entity {
   private direction: Vector;
   private carriedFood: Food;
   private pheromoneLimit: number;
 
-  constructor (private position: Vector) {
+  constructor (protected position: Vector, protected radius: number) {
+    super(position, radius);
+
     this.direction = Vector.randomUnitVector();
     this.resetPheromoneLimit();
   }
 
-  getPosition () {
-    return this.position.round();
+  isAtAntHill (antHill: AntHill): boolean {
+    return this.position.distance(antHill.getPosition()) < antHill.radius + this.radius;
   }
 
-  isAtAntHill (antHill: AntHill): boolean {
-    return this.position.distance(antHill.position) < antHill.radius;
+  isOnPheromone (pheromoneGrid: PheromoneGrid) {
+    let pheromone: Pheromone = pheromoneGrid.findPheromone(this.position, 1 + this.radius);
+    return !!pheromone;
   }
 
   canReleasePheromone (): boolean {
@@ -33,28 +38,18 @@ export class Ant {
     this.pheromoneLimit = CONFIG.ANT.PHEROMONE_LIMIT;
   }
 
-  isOnPheromone (pheromoneGrid: PheromoneGrid) {
-    return pheromoneGrid.get(this.position.round()).strength > 0;
-  }
-
   releasePheromone (pheromoneGrid: PheromoneGrid) {
     if (!this.canReleasePheromone()) return;
-    return pheromoneGrid.add(this.position.round());
+    return pheromoneGrid.add(this.position);
   }
 
   releaseStrongerPheromone (pheromoneGrid: PheromoneGrid) {
     if (!this.canReleasePheromone()) return;
-    return pheromoneGrid.add(this.position.round(), CONFIG.ANT.PHEROMONE_MULTIPLIER);
+    return pheromoneGrid.add(this.position, CONFIG.ANT.PHEROMONE_MULTIPLIER);
   }
 
   isCarryingFood (): boolean {
     return !!this.carriedFood;
-  }
-
-  findFood (foods: Array<Food>): Food {
-    return foods.filter((food: Food) => {
-      return (food && food.isOnGround && this.position.distance(food.position) < food.radius);
-    }).shift();
   }
 
   pickUpFood (food: Food) {
@@ -106,8 +101,9 @@ export class Ant {
     let forward = direction.toRadians();
 
     for (let radians = forward - Math.PI / 8; radians <= forward + Math.PI / 8; radians += Math.PI / 8) {
-      let point = this.position.add(Vector.fromRadians(radians));
-      let strength = pheromoneGrid.get(point.round()).strength;
+      let point: Vector = this.position.add(Vector.fromRadians(radians));
+      let pheromone: Pheromone = pheromoneGrid.findPheromone(point, 1);
+      let strength: number = pheromone ? pheromone.strength : 0;
 
       if (strength > strongestStrength) {
         strongestStrength = strength;
@@ -137,7 +133,7 @@ export class Ant {
         newDirection = this.turnBackDirection(this.direction);
       }
     } else {
-      let food = this.findFood(world.foods);
+      let food = world.findFood(this.position);
       if (food) {
         this.pickUpFood(food);
         this.resetPheromoneLimit();
@@ -158,16 +154,11 @@ export class Ant {
     this.pheromoneLimit -= 1;
 
     if (this.isCarryingFood()) {
-      this.carriedFood.position = this.position;
+      this.carriedFood.setPosition(this.position);
       this.releaseStrongerPheromone(world.pheromoneGrid);
     } else {
       this.releasePheromone(world.pheromoneGrid);
     }
-  }
-
-  /** @deprecated */
-  getText () {
-  	return 'a';
   }
 
   /** @deprecated */

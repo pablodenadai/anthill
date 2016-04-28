@@ -7,7 +7,6 @@
     "tslint": "tslint \"core/**/*.ts\" \"client/**/*.ts\"",
     "browserify": "browserify client/scripts/Main.ts -s app -p tsify -d -o build/client/bundle.js",
     "sass": "sass --update client/scss:build/client/css",
-
     "build": "npm run tslint && npm run browserify && npm run sass",
     "listen": "http-server"
   },
@@ -24,5 +23,10 @@
   "devDependencies": {
     "browserify": "13.0.0",
     "tsify": "0.15.2"
+  },
+  "dependencies": {
+    "lodash": "4.11.1",
+    "phaser": "^2.4.7",
+    "shortid": "2.2.6"
   }
 }

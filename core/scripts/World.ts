@@ -1,4 +1,6 @@
+import { Entity } from './common/Entity';
 import { Rectangle } from './common/Rectangle';
+import { Vector } from './common/Vector';
 
 import { Food } from './Food';
 import { FoodFactory } from './FoodFactory';
@@ -33,7 +35,7 @@ export class World {
 
     this.ants = [];
     for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
-      this.ants.push(new Ant(this.antHill.position));
+      this.ants.push(new Ant(this.antHill.getPosition(), CONFIG.ANT.RADIUS));
     }
   }
 
@@ -46,6 +48,12 @@ export class World {
     this.foods.splice(this.foods.indexOf(food), 1);
   }
 
+  findFood (position: Vector): Food {
+    return this.foods.filter((food: Food) => {
+      return (food && food.isOnGround && position.distance(food.getPosition()) < food.radius);
+    }).shift();
+  }
+
   step () {
     this.ants.forEach((ant: Ant) => ant.step(this));
     this.pheromoneGrid.dissipate();
@@ -54,7 +62,7 @@ export class World {
   /**
    * @deprecated
    */
-  elements () {
+  elements (): Array<Entity> {
     return [...this.ants, this.antHill, ...this.foods, ...this.pheromoneGrid.getPheromones()];
   }
 

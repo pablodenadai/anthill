@@ -1,31 +1,46 @@
+import * as _ from 'lodash';
+
 export class View {
 	public $container: JQuery;
-	public extraDrawActions: Array<any>;
+	public $elements: { [key: string]: JQuery };
 
 	constructor (id: string, public scale) {
 		this.$container = $(`#${id}`);
-		this.extraDrawActions = [];
+		this.$elements = {};
 	}
 
 	draw (elements) {
-		this.doClear();
-
 		elements.forEach((element) => {
-			this.$container.append($(`
-				<div style='
-					z-index: ${element.getZIndex()};
-					color: ${element.getColour()};
-					left: ${(element.getPosition().x * this.scale)}px;
-					top: ${(element.getPosition().y * this.scale)}px;'>
-				${element.getText()}
-				</div>`
-			));
-		});
+			let id: string = element.getId();
 
-		this.extraDrawActions.forEach((extraDrawAction) => {
-			if (extraDrawAction.draw) {
-				extraDrawAction.draw();
+			let zIndex: number = element.getZIndex();
+			let color: string = element.getColour();
+			let top: number = element.getPosition().x * this.scale;
+			let left: number = element.getPosition().y * this.scale;
+			let size: number = element.getRadius() * 2;
+
+			let $element: JQuery = this.$elements[id];
+
+			if ($element) {
+				$element
+					.css('left', `${top}px`)
+					.css('top', `${left}px`);
+				return;
 			}
+
+		 	$element = $(`
+				<div style='
+					z-index: ${zIndex};
+					background-color: ${color};
+					width: ${size}px;
+					height: ${size}px;
+					left: ${top}px;
+					top: ${left}px;'>
+				</div>`
+			);
+
+			this.$container.append($element);
+			this.$elements[id] = $element;
 		});
 	}
 
