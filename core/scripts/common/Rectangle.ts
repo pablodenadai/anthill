@@ -5,15 +5,6 @@ export class Rectangle {
   public bottomRight: Vector;
 
   constructor (arg1: number, arg2: number, arg3: number, arg4: number) {
-    // if (typeof arg4 == "undefined") {
-    //   this.topLeft = arg1;
-    //   this.bottomRight = arg2;
-    // }
-    // else {
-    //   this.topLeft = new Vector(arg1, arg2);
-    //   this.bottomRight = new Vector(arg3, arg4);
-    // }
-
     this.topLeft = new Vector(arg1, arg2);
     this.bottomRight = new Vector(arg3, arg4);
   }
@@ -30,7 +21,7 @@ export class Rectangle {
     return this.width() * this.height();
   }
 
-  contains (point: Vector, includeTopLeft: boolean = false, includeBottomRight: boolean = false) {
+  contains (point: Vector, includeTopLeft: boolean = true, includeBottomRight: boolean = true) {
     return (
       includeTopLeft ?
       this.topLeft.x <= point.x && this.topLeft.y <= point.y :

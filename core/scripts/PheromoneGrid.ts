@@ -17,10 +17,10 @@ export class PheromoneGrid {
 
     this.grid = [];
 
-    for (let i = 0; i < width; i++) {
+    for (let i = 0; i <= width; i++) {
       this.grid[i] = [];
 
-      for (let j = 0; j < height; j++) {
+      for (let j = 0; j <= height; j++) {
         this.grid[i][j] = 0;
       }
     }
@@ -30,8 +30,8 @@ export class PheromoneGrid {
     let width = this.rectangle.width();
     let height = this.rectangle.height();
 
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
+    for (let i = 0; i <= width; i++) {
+      for (let j = 0; j <= height; j++) {
         this.grid[i][j] -= CONFIG.PHEROMONE.DISSIPATION;
 
         if (this.grid[i][j] < CONFIG.PHEROMONE.DISAPPEAR_THRESHOLD) {
@@ -64,8 +64,8 @@ export class PheromoneGrid {
     let width = this.rectangle.width();
     let height = this.rectangle.height();
 
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
+    for (let i = 0; i <= width; i++) {
+      for (let j = 0; j <= height; j++) {
         if (this.grid[i][j] > 0) {
           pheromones.push(new Pheromone(new Vector(i, j), this.grid[i][j]));
         }
@@ -75,12 +75,12 @@ export class PheromoneGrid {
     return pheromones;
   }
 
-  empty (): boolean {
+  isEmpty (): boolean {
     let width = this.rectangle.width();
     let height = this.rectangle.height();
 
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
+    for (let i = 0; i <= width; i++) {
+      for (let j = 0; j <= height; j++) {
         if (this.grid[i][j] > 0) {
           return false;
         }

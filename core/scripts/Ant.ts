@@ -99,7 +99,7 @@ export class Ant {
   }
 
   step (world: World) {
-    let newDirection: Vector;
+    let newDirection: Vector = this.direction;
 
     if (this.isCarryingFood()) {
       this.releaseStrongerPheromone(world.pheromoneGrid);
@@ -108,7 +108,6 @@ export class Ant {
         world.removeFood(this.dropFood());
         newDirection = this.getRandomRotation();
       } else if (this.isOnPheromone(world.pheromoneGrid)) {
-        // review this - direction ?
         newDirection = this.sensePheromoneInDirection(world.pheromoneGrid, this.direction);
       }
     } else {
@@ -117,28 +116,20 @@ export class Ant {
       let food = this.findFood(world.foods);
       if (food) {
         this.pickUpFood(food);
-        // newDirection = this.getPrevious();
-        // go back
+        newDirection = this.position.subtract(this.direction);
       }
-    }
-
-    if (!newDirection) {
-      // go straight ahead
     }
 
     if (!this.canTurnRationally()) {
       newDirection = this.getRandomRotation();
     }
 
-    if (!world.rectangle.contains(this.position)) {
-      newDirection = this.position.directionTo(world.antHill.position);
+    while (!world.rectangle.contains(this.position.add(newDirection))) {
+      newDirection = Vector.randomUnitVector();
     }
 
-
     this.direction = newDirection;
-    this.position = this.position
-      .add(this.direction)
-      .round();
+    this.position = this.position.add(this.direction).round();
 
     if (this.isCarryingFood()) {
       this.carriedFood.position = this.position;
