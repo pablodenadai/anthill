@@ -7,7 +7,7 @@ export class AntHill {
    * @deprecated
    */
   getText () {
-  	return 'h';
+  	return 'H';
   }
 
   /**

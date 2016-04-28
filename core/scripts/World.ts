@@ -26,7 +26,7 @@ export class World {
       CONFIG.ANTHILL.RADIUS
     );
 
-    this.pheromoneGrid = new PheromoneGrid(this.rectangle);
+    this.pheromoneGrid = new PheromoneGrid();
 
     this.foods = [];
     this.foodFactory = new FoodFactory();

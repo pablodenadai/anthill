@@ -87,6 +87,7 @@ export class Vector {
   static right = new Vector(1, 0);
   static down = new Vector(0, 1);
   static left = new Vector(-1, 0);
+  static null = new Vector(0, 0);
 
   static randomUnitVector () {
     let angle = Math.random() * 2 * Math.PI;

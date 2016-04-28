@@ -11,7 +11,6 @@ export class Main {
 
   constructor() {
     this.init();
-
     $('#startAnts').click(this.start.bind(this));
   }
 
@@ -19,11 +18,7 @@ export class Main {
     this.world = new World();
     this.world.start();
 
-    // for (let i = 0; i < 100; i++) {
-    //   this.world.step();
-    // }
-
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 15; i++) {
       this.world.createFood(true);
     }
 

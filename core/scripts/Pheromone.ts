@@ -1,22 +1,37 @@
 import { Vector } from './common/Vector';
 
+import { CONFIG } from './Config';
+
 export class Pheromone {
   constructor (public position: Vector, public strength: number) {}
+
+  dissipate () {
+    this.strength -= CONFIG.PHEROMONE.DISSIPATION_RATE;
+    if (this.strength < CONFIG.PHEROMONE.DISAPPEAR_THRESHOLD) {
+      this.strength = 0;
+    }
+  }
+
+  add (strength: number) {
+    this.strength += strength;
+  }
 
   /**
    * @deprecated
    */
   getText () {
-  	return 'p';
+  	return '●'; // this.strength.toFixed(0);
   }
 
   /**
    * @deprecated
    */
   getColour () {
-  	let strength = Math.max(1 - this.strength * .4, 0);
-
-  	return `rgb(237, ${Math.round(strength * 218)}, ${Math.round(strength * 164)})`;
+    let map = function (value, inMin, inMax, outMin, outMax) {
+      return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+    };
+  	let transparency: number = map(this.strength, 0, 15, 0, 1);
+  	return `rgba(255, 0, 0, ${transparency})`;
   }
 
   /**
