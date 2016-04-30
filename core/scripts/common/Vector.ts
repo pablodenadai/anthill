@@ -13,7 +13,7 @@ export class Vector {
   }
 
   length (): number {
-    return this.distance(new Vector());
+    return this.distance(Vector.null);
   }
 
   add (vector2: Vector) {
@@ -59,8 +59,12 @@ export class Vector {
   }
 
   directionTo (vector2: Vector): Vector {
-    return vector2.subtract(this)
-    .divide(this.distance(vector2));
+    return Vector.fromRadians(Math.atan2(vector2.y - this.y, vector2.x - this.x));
+  }
+
+  meanDirectionTo (vectors: Array<Vector>): Vector {
+    let vector2: Vector = Vector.mean(vectors);
+    return Vector.fromRadians(Math.atan2(vector2.y - this.y, vector2.x - this.x));
   }
 
   /**
@@ -87,7 +91,14 @@ export class Vector {
   static right = new Vector(1, 0);
   static down = new Vector(0, 1);
   static left = new Vector(-1, 0);
-  static null = new Vector(0, 0);
+  static null = new Vector();
+
+  static mean(vectors: Array<Vector>): Vector {
+    return new Vector(
+      vectors.reduce((x: number, v: Vector) => x + v.x, 0) / vectors.length,
+      vectors.reduce((y: number, v: Vector) => y + v.y, 0) / vectors.length
+    );
+  }
 
   static randomUnitVector () {
     let angle = Math.random() * 2 * Math.PI;

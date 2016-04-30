@@ -17,7 +17,7 @@ export class Food extends Entity {
    * @deprecated
    */
   getColour () {
-  	return 'green';
+  	return 'rgb(0, 255, 0)';
   }
 
   /**

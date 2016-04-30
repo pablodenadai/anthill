@@ -6,14 +6,14 @@ import { CONFIG } from './Config';
 const FOOD = CONFIG.FOOD;
 const WORLD = CONFIG.WORLD;
 
-export class FoodFactory {
+export abstract class FoodFactory {
 
   /**
   * Create a new cluster of foods. If force is true, a cluster
   * is definitely created. If false, it could be created based
   * on probability.
   */
-  create (force: boolean): Array<Food> {
+  static create (force: boolean): Array<Food> {
     let foods: Array<Food> = [];
 
     if (force || Math.random() < FOOD.CREATE_PROBABILITY) {

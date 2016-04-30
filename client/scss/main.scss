@@ -5,7 +5,8 @@
   div {
   	position: absolute;
     border-radius: 100px;
-    -webkit-transition: all ease;
-    transition: all ease;
+    // -webkit-transition: all ease;
+    // transition: all ease;
+    transform: translate(-50%, -50%);
   }
 }

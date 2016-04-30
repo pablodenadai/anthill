@@ -2,21 +2,22 @@ import { Entity } from './common/Entity';
 import { Rectangle } from './common/Rectangle';
 import { Vector } from './common/Vector';
 
-import { Food } from './Food';
-import { FoodFactory } from './FoodFactory';
 import { Ant } from './Ant';
 import { AntHill } from './AntHill';
-import { PheromoneGrid } from './PheromoneGrid';
+import { FoodList } from './FoodList';
+import { PheromoneList } from './PheromoneList';
 
 import { CONFIG } from './Config';
 
 export class World {
+  public rectangle: Rectangle;
+
   public ants: Array<Ant>;
   public antHill: AntHill;
-  public foods: Array<Food>;
-  public foodFactory: FoodFactory;
-  public rectangle: Rectangle;
-  public pheromoneGrid: PheromoneGrid;
+  public foodList: FoodList;
+  public pheromoneList: PheromoneList;
+
+  public previousElements: Array<Entity>;
 
   constructor () {
     this.rectangle = CONFIG.WORLD.RECTANGLE;
@@ -24,46 +25,54 @@ export class World {
 
   start () {
     this.antHill = new AntHill(
-      CONFIG.ANTHILL.POSITION.round(),
+      CONFIG.ANTHILL.POSITION,
       CONFIG.ANTHILL.RADIUS
     );
 
-    this.pheromoneGrid = new PheromoneGrid();
+    this.foodList = new FoodList();
+    for (let i = 0; i < CONFIG.WORLD.FOOD_COUNT; i++) {
+      this.foodList.create(true);
+    }
 
-    this.foods = [];
-    this.foodFactory = new FoodFactory();
+    this.pheromoneList = new PheromoneList();
 
     this.ants = [];
-    for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
+    let antCreationInterval: number = setInterval(() => {
+      /** TODO ant list */
       this.ants.push(new Ant(this.antHill.getPosition(), CONFIG.ANT.RADIUS));
-    }
-  }
 
-  createFood (force: boolean = false) {
-    let newFoods: Array<Food> = this.foodFactory.create(force);
-    newFoods.forEach((food: Food) => this.foods.push(food));
-  }
+      if (this.ants.length === CONFIG.WORLD.ANT_COUNT) {
+        clearInterval(antCreationInterval);
+      }
+    }, CONFIG.WORLD.ANT_CREATION_INTERVAL);
 
-  removeFood (food: Food) {
-    this.foods.splice(this.foods.indexOf(food), 1);
-  }
-
-  findFood (position: Vector): Food {
-    return this.foods.filter((food: Food) => {
-      return (food && food.isOnGround && position.distance(food.getPosition()) < food.radius);
-    }).shift();
+    this.previousElements = [];
   }
 
   step () {
     this.ants.forEach((ant: Ant) => ant.step(this));
-    this.pheromoneGrid.dissipate();
+    this.pheromoneList.dissipate();
   }
 
   /**
    * @deprecated
    */
-  elements (): Array<Entity> {
-    return [...this.ants, this.antHill, ...this.foods, ...this.pheromoneGrid.getPheromones()];
+  elements () {
+    // Note: a bit of a work-around here.
+    // `FoodList` and `PheromoneList` are both extension of the `Array` class.
+    // Extending native interfaces seems to be a problem in ES5 (which is our current target).
+    // Perhaps we need to work on getting TypeScript to generate ES2015 (ES6) instead,
+    // but it seems like Browserify doesn't work with ES2015. Oh lordy!
+    let elements: Array<Entity> = [...this.ants, this.antHill, ...[...this.foodList], ...[...this.pheromoneList]];
+
+    let updated: Array<Entity> = elements;
+    let deleted: Array<Entity> = _.difference(this.previousElements, elements);
+
+    this.previousElements = elements;
+
+    return { updated, deleted };
+
+    // return elements;
   }
 
   /**

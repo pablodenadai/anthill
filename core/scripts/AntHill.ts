@@ -17,7 +17,7 @@ export class AntHill extends Entity {
    * @deprecated
    */
   getColour () {
-  	return 'blue';
+  	return 'rgb(0, 0, 255)';
   }
 
   /**

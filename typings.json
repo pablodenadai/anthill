@@ -4,6 +4,8 @@
   "dependencies": {},
   "ambientDependencies": {
     "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#4cdfbe96b666eec5e1defbb519a62abf04e96764",
-    "lodash": "registry:dt/lodash#3.10.0+20160330154726"
+    "lodash": "github:DefinitelyTyped/DefinitelyTyped/lodash/lodash.d.ts#fc4a666145cc02bfb858d4b670f9a4d9dd070191",
+    "pixi.js": "registry:dt/pixi.js#3.0.9+20160404013751",
+    "shortid": "registry:dt/shortid#0.0.0+20160316155526"
   }
 }

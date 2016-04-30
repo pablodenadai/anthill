@@ -69,5 +69,13 @@ There are a few other small rules like an ant won't turn left or right too many 
 - Ant Speed
 - 60fps
 - Sort out config obj
-- food spread ? multiply ?
-- food list and pheromone list
+- Pheromone amount instead of steps limit
+- consistency
+
+- left or right on pher depending on if carrying food or not
+- sphere
+
+- NO foods amounst instead of new elements
+- DONE remove dom els
+- DONE food spread ? multiply ?
+- DONE food list and pheromone list

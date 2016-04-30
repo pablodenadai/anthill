@@ -3,7 +3,7 @@ import { Vector } from './common/Vector';
 
 import { Food } from './Food';
 import { Pheromone } from './Pheromone';
-import { PheromoneGrid } from './PheromoneGrid';
+import { PheromoneList } from './PheromoneList';
 import { AntHill } from './AntHill';
 import { World } from './World';
 
@@ -22,12 +22,12 @@ export class Ant extends Entity {
   }
 
   isAtAntHill (antHill: AntHill): boolean {
-    return this.position.distance(antHill.getPosition()) < antHill.radius + this.radius;
+    return antHill.isAt(this.position, this.radius);
   }
 
-  isOnPheromone (pheromoneGrid: PheromoneGrid) {
-    let pheromone: Pheromone = pheromoneGrid.findPheromone(this.position, 1 + this.radius);
-    return !!pheromone;
+  isOnPheromone (pheromoneList: PheromoneList) {
+    let pheromones: Array<Pheromone> = pheromoneList.find(this.position, 1);
+    return !!pheromones.length;
   }
 
   canReleasePheromone (): boolean {
@@ -38,14 +38,19 @@ export class Ant extends Entity {
     this.pheromoneLimit = CONFIG.ANT.PHEROMONE_LIMIT;
   }
 
-  releasePheromone (pheromoneGrid: PheromoneGrid) {
+  releasePheromone (pheromoneList: PheromoneList, stronger: boolean = false) {
     if (!this.canReleasePheromone()) return;
-    return pheromoneGrid.add(this.position);
+
+    let point: Vector = this.position;
+
+    let multiplier: number = stronger ?
+      CONFIG.ANT.PHEROMONE_MULTIPLIER : 1;
+
+    return pheromoneList.add(point, multiplier);
   }
 
-  releaseStrongerPheromone (pheromoneGrid: PheromoneGrid) {
-    if (!this.canReleasePheromone()) return;
-    return pheromoneGrid.add(this.position, CONFIG.ANT.PHEROMONE_MULTIPLIER);
+  releaseStrongerPheromone (pheromoneList: PheromoneList) {
+    return this.releasePheromone(pheromoneList, true);
   }
 
   isCarryingFood (): boolean {
@@ -74,18 +79,18 @@ export class Ant extends Entity {
 
   canTurnRationally (world: World): boolean {
     let rationality: number =
-      this.isOnPheromone(world.pheromoneGrid) ? CONFIG.ANT.RATIONALITY_ON_PHEROMONE :
+      this.isOnPheromone(world.pheromoneList) ? CONFIG.ANT.RATIONALITY_ON_PHEROMONE :
       CONFIG.ANT.RATIONALITY;
 
     return Math.random() < rationality;
   }
 
-  getRandomRotation (): Vector {
+  randomRotation (): Vector {
     let rotation = Math.random() * 2 * CONFIG.ANT.MAX_ROTATION - CONFIG.ANT.MAX_ROTATION;
     return this.direction.rotate(rotation);
   }
 
-  turnBackDirection (direction: Vector): Vector {
+  oppositeDirection (direction: Vector): Vector {
     return Vector.null.subtract(direction);
   }
 
@@ -94,22 +99,30 @@ export class Ant extends Entity {
   * Returns the direction of the found pheromone, as a vector, or null if none were found ? TODO.
   * If there are more than one, return the direction of the strongest.
   */
-  getDirectionFromPheromone (pheromoneGrid: PheromoneGrid, direction: Vector): Vector {
+  directionToPheromone (pheromoneList: PheromoneList, direction: Vector): Vector {
     let strongestDirection: number = 0;
     let strongestStrength: number = 0;
 
     let forward = direction.toRadians();
+    let left = forward - Math.PI / 8;
+    let right = forward + Math.PI / 8;
 
-    for (let radians = forward - Math.PI / 8; radians <= forward + Math.PI / 8; radians += Math.PI / 8) {
-      let point: Vector = this.position.add(Vector.fromRadians(radians));
-      let pheromone: Pheromone = pheromoneGrid.findPheromone(point, 1);
-      let strength: number = pheromone ? pheromone.strength : 0;
+    [left, right].forEach((radians: number) => {
+      let antennaDirection: Vector = Vector.fromRadians(radians, 3);
+      let antennaPoint: Vector = this.position.add(antennaDirection);
 
-      if (strength > strongestStrength) {
-        strongestStrength = strength;
-        strongestDirection = radians;
+      let pheromonesUnderAntenna: Array<Pheromone> = pheromoneList.find(antennaPoint, 1);
+      if (pheromonesUnderAntenna.length) {
+        // debugger;
+        let vectors: Array<Vector> = pheromonesUnderAntenna.map((p: Pheromone) => p.getPosition() );
+        let strength: number = pheromoneList.reduce((x: number, v: Pheromone) => x + v.strength, 0);
+
+        if (strength > strongestStrength) {
+          strongestStrength = strength;
+          strongestDirection = this.position.meanDirectionTo(vectors).toRadians();
+        }
       }
-    }
+    });
 
     if (strongestStrength) {
       return Vector.fromRadians(strongestDirection);
@@ -121,49 +134,51 @@ export class Ant extends Entity {
   step (world: World) {
     let newDirection: Vector = this.direction;
 
-    let pheromoneDirection = this.getDirectionFromPheromone(world.pheromoneGrid, this.direction);
+    let pheromoneDirection = this.directionToPheromone(world.pheromoneList, this.direction);
     if (pheromoneDirection) {
       newDirection = pheromoneDirection;
     }
 
     if (this.isCarryingFood()) {
       if (this.isAtAntHill(world.antHill)) {
-        world.removeFood(this.dropFood());
+        world.foodList.remove(this.dropFood());
         this.resetPheromoneLimit();
-        newDirection = this.turnBackDirection(this.direction);
+        newDirection = this.oppositeDirection(this.direction);
       }
     } else {
-      let food = world.findFood(this.position);
+      let food = world.foodList.find(this.position);
       if (food) {
         this.pickUpFood(food);
         this.resetPheromoneLimit();
-        newDirection = this.turnBackDirection(this.direction);
+        newDirection = this.oppositeDirection(this.direction);
       }
     }
 
     if (!this.canTurnRationally(world)) {
-      newDirection = this.getRandomRotation();
+      newDirection = this.randomRotation();
     }
 
     while (!world.rectangle.contains(this.position.add(newDirection))) {
       newDirection = Vector.randomUnitVector();
     }
 
+    if (this.isCarryingFood()) {
+      this.releaseStrongerPheromone(world.pheromoneList);
+    } else {
+      this.releasePheromone(world.pheromoneList);
+    }
+
     this.direction = newDirection;
     this.position = this.position.add(this.direction);
-    this.pheromoneLimit -= 1;
-
     if (this.isCarryingFood()) {
       this.carriedFood.setPosition(this.position);
-      this.releaseStrongerPheromone(world.pheromoneGrid);
-    } else {
-      this.releasePheromone(world.pheromoneGrid);
     }
+    this.pheromoneLimit -= 1;
   }
 
   /** @deprecated */
   getColour () {
-  	return 'black';
+  	return 'rgb(0, 0, 0)';
   }
 
   /** @deprecated */
