@@ -4,9 +4,9 @@ import { Vector } from './common/Vector';
 export const CONFIG = {
   WORLD: {
     RECTANGLE: new Rectangle(0, 0, 500, 250),
-    ANT_COUNT: 20,
+    ANT_COUNT: 5,
     ANT_CREATION_INTERVAL: 500,
-    FOOD_COUNT: 20
+    FOOD_COUNT: 40
   },
   ANT: {
     RADIUS: 5,
@@ -30,7 +30,7 @@ export const CONFIG = {
   },
   PHEROMONE: {
     RADIUS: 2,
-    DISSIPATION_RATE: 0.002,
+    DISSIPATION_RATE: 0.02,
     DISAPPEAR_THRESHOLD: 0,
     STRENGTH: 1
   }

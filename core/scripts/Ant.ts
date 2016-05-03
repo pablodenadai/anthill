@@ -14,20 +14,26 @@ export class Ant extends Entity {
   private carriedFood: Food;
   private pheromoneLimit: number;
 
-  constructor (protected position: Vector, protected radius: number) {
+  private stepInterval: number;
+
+  constructor (protected position: Vector, protected radius: number, private world: World) {
     super(position, radius);
 
     this.direction = Vector.randomUnitVector();
     this.resetPheromoneLimit();
   }
 
+  leaveAntHill () {
+    this.stepInterval = setInterval(this.step.bind(this), 100);
+  }
+
   isAtAntHill (antHill: AntHill): boolean {
-    return antHill.isAt(this.position, this.radius);
+    return antHill.isAt(this.getPosition(), this.radius);
   }
 
   isOnPheromone (pheromoneList: PheromoneList) {
-    let pheromones: Array<Pheromone> = pheromoneList.find(this.position, 1);
-    return !!pheromones.length;
+    let pheromone: Pheromone = pheromoneList.find(this.getPosition());
+    return !!pheromone;
   }
 
   canReleasePheromone (): boolean {
@@ -38,19 +44,11 @@ export class Ant extends Entity {
     this.pheromoneLimit = CONFIG.ANT.PHEROMONE_LIMIT;
   }
 
-  releasePheromone (pheromoneList: PheromoneList, stronger: boolean = false) {
+  releasePheromone (pheromoneList: PheromoneList) {
     if (!this.canReleasePheromone()) return;
-
-    let point: Vector = this.position;
-
-    let multiplier: number = stronger ?
-      CONFIG.ANT.PHEROMONE_MULTIPLIER : 1;
-
-    return pheromoneList.add(point, multiplier);
-  }
-
-  releaseStrongerPheromone (pheromoneList: PheromoneList) {
-    return this.releasePheromone(pheromoneList, true);
+    this.pheromoneLimit--;
+    let multiplier: number = this.isCarryingFood() ? CONFIG.ANT.PHEROMONE_MULTIPLIER : 1;
+    return pheromoneList.add(this.getPosition(), multiplier);
   }
 
   isCarryingFood (): boolean {
@@ -79,7 +77,9 @@ export class Ant extends Entity {
 
   canTurnRationally (world: World): boolean {
     let rationality: number =
-      this.isOnPheromone(world.pheromoneList) ? CONFIG.ANT.RATIONALITY_ON_PHEROMONE :
+      this.isOnPheromone(world.pheromoneList) ?
+        this.isCarryingFood() ? 1 :
+        CONFIG.ANT.RATIONALITY_ON_PHEROMONE :
       CONFIG.ANT.RATIONALITY;
 
     return Math.random() < rationality;
@@ -104,22 +104,29 @@ export class Ant extends Entity {
     let strongestStrength: number = 0;
 
     let forward = direction.toRadians();
-    let left = forward - Math.PI / 8;
-    let right = forward + Math.PI / 8;
+    let left = forward - Math.PI / 5;
+    let right = forward + Math.PI / 5;
 
     [left, right].forEach((radians: number) => {
-      let antennaDirection: Vector = Vector.fromRadians(radians, 3);
+      let antennaDirection: Vector = Vector.fromRadians(radians, this.radius + 2);
       let antennaPoint: Vector = this.position.add(antennaDirection);
 
-      let pheromonesUnderAntenna: Array<Pheromone> = pheromoneList.find(antennaPoint, 1);
+      let pheromonesUnderAntenna: Array<Pheromone> = pheromoneList.filterP(antennaPoint, 1);
       if (pheromonesUnderAntenna.length) {
         // debugger;
         let vectors: Array<Vector> = pheromonesUnderAntenna.map((p: Pheromone) => p.getPosition() );
         let strength: number = pheromoneList.reduce((x: number, v: Pheromone) => x + v.strength, 0);
 
-        if (strength > strongestStrength) {
-          strongestStrength = strength;
-          strongestDirection = this.position.meanDirectionTo(vectors).toRadians();
+        // if (this.isCarryingFood()) {
+        //   if (strength > 0 && strength < strongestStrength) {
+        //     strongestStrength = strength;
+        //     strongestDirection = this.position.meanDirectionTo(vectors).toRadians();
+        //   }
+        // } else {
+          if (strength > strongestStrength) {
+            strongestStrength = strength;
+            strongestDirection = this.position.meanDirectionTo(vectors).toRadians();
+          // }
         }
       }
     });
@@ -131,49 +138,62 @@ export class Ant extends Entity {
     return null;
   }
 
-  step (world: World) {
-    let newDirection: Vector = this.direction;
+  setPosition (newDirection: Vector) {
+    let stepSize = 2;
+    let redirectTries: number = 5;
 
-    let pheromoneDirection = this.directionToPheromone(world.pheromoneList, this.direction);
-    if (pheromoneDirection) {
-      newDirection = pheromoneDirection;
-    }
-
-    if (this.isCarryingFood()) {
-      if (this.isAtAntHill(world.antHill)) {
-        world.foodList.remove(this.dropFood());
-        this.resetPheromoneLimit();
-        newDirection = this.oppositeDirection(this.direction);
-      }
-    } else {
-      let food = world.foodList.find(this.position);
-      if (food) {
-        this.pickUpFood(food);
-        this.resetPheromoneLimit();
-        newDirection = this.oppositeDirection(this.direction);
-      }
-    }
-
-    if (!this.canTurnRationally(world)) {
-      newDirection = this.randomRotation();
-    }
-
-    while (!world.rectangle.contains(this.position.add(newDirection))) {
+    while (!this.world.rectangle.contains(this.position.add(newDirection.multiply(stepSize))) && redirectTries > 0) {
       newDirection = Vector.randomUnitVector();
+      redirectTries--;
+      if (!redirectTries) {
+        newDirection = this.oppositeDirection(this.direction);
+      }
     }
 
+    let newPosition = this.position.add(newDirection.multiply(stepSize));
+
     if (this.isCarryingFood()) {
-      this.releaseStrongerPheromone(world.pheromoneList);
-    } else {
-      this.releasePheromone(world.pheromoneList);
+      this.carriedFood.setPosition(newPosition);
     }
 
     this.direction = newDirection;
-    this.position = this.position.add(this.direction);
+    super.setPosition(newPosition);
+  }
+
+  getNewDirection (): Vector {
     if (this.isCarryingFood()) {
-      this.carriedFood.setPosition(this.position);
+      if (this.isAtAntHill(this.world.antHill)) {
+        this.world.foodList.remove(this.dropFood());
+        this.resetPheromoneLimit();
+        return this.oppositeDirection(this.direction);
+      }
     }
-    this.pheromoneLimit -= 1;
+
+    let food = this.world.foodList.find(this.position, this.radius);
+    if (food) {
+      this.pickUpFood(food);
+      this.resetPheromoneLimit();
+      return this.oppositeDirection(this.direction);
+    }
+
+    let newDirection: Vector = this.direction;
+
+    if (this.canTurnRationally(this.world)) {
+      let pheromoneDirection = this.directionToPheromone(this.world.pheromoneList, this.direction);
+      if (pheromoneDirection) {
+        newDirection = pheromoneDirection;
+      }
+    } else {
+      newDirection = this.randomRotation();
+    }
+
+    return newDirection;
+  }
+
+  step () {
+    let newDirection: Vector = this.getNewDirection();
+    this.releasePheromone(this.world.pheromoneList);
+    this.setPosition(newDirection);
   }
 
   /** @deprecated */

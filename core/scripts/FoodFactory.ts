@@ -13,27 +13,27 @@ export abstract class FoodFactory {
   * is definitely created. If false, it could be created based
   * on probability.
   */
-  static create (force: boolean): Array<Food> {
+  static create (render): Array<Food> {
     let foods: Array<Food> = [];
 
-    if (force || Math.random() < FOOD.CREATE_PROBABILITY) {
-      let centreX = Math.random() * WORLD.RECTANGLE.width();
-      let centreY = Math.random() * WORLD.RECTANGLE.height();
-      let count = Math.floor(Math.random() * (FOOD.MAX_AMOUNT -	FOOD.MIN_AMOUNT)) +	FOOD.MIN_AMOUNT;
+    let centreX = Math.random() * WORLD.RECTANGLE.width();
+    let centreY = Math.random() * WORLD.RECTANGLE.height();
+    let count = Math.floor(Math.random() * (FOOD.MAX_AMOUNT -	FOOD.MIN_AMOUNT)) +	FOOD.MIN_AMOUNT;
 
-      for (let i = 0; i < count; i ++) {
-        let position = new Vector(centreX, centreY);
+    for (let i = 0; i < count; i ++) {
+      let position = new Vector(centreX, centreY);
 
-        position = position.add(
-          Vector.randomUnitVector()
-          .multiply(FOOD.SPREAD)
-          .multiply(Math.random())
-        );
+      position = position.add(
+        Vector.randomUnitVector()
+        .multiply(FOOD.SPREAD)
+        .multiply(Math.random())
+      );
 
-        let radius = Math.random() * (FOOD.MAX_RADIUS - FOOD.MIN_RADIUS) + FOOD.MIN_RADIUS;
+      let radius = Math.random() * (FOOD.MAX_RADIUS - FOOD.MIN_RADIUS) + FOOD.MIN_RADIUS;
 
-        foods.push(new Food(position, radius));
-      }
+      let food = new Food(position, radius);
+      food.render = render;
+      foods.push(food);
     }
 
     return foods;

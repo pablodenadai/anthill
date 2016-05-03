@@ -72,8 +72,12 @@ There are a few other small rules like an ant won't turn left or right too many 
 - Pheromone amount instead of steps limit
 - consistency
 
+- review staying on trail
+- review turning back
 - left or right on pher depending on if carrying food or not
-- sphere
+- remove food
+- create, update, destroy events
+- pheromone rewrite - curve/line? grid?
 
 - NO foods amounst instead of new elements
 - DONE remove dom els

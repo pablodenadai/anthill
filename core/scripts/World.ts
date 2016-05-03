@@ -17,66 +17,54 @@ export class World {
   public foodList: FoodList;
   public pheromoneList: PheromoneList;
 
-  public previousElements: Array<Entity>;
+  // public previousElements: Array<Entity>;
+
+  public render: Function;
+  public destroy: Function;
 
   constructor () {
     this.rectangle = CONFIG.WORLD.RECTANGLE;
-  }
+  };
 
-  start () {
+  init() {
     this.antHill = new AntHill(
       CONFIG.ANTHILL.POSITION,
       CONFIG.ANTHILL.RADIUS
     );
+    this.render(this.antHill);
 
     this.foodList = new FoodList();
-    for (let i = 0; i < CONFIG.WORLD.FOOD_COUNT; i++) {
-      this.foodList.create(true);
-    }
+    this.foodList.render = this.render.bind(this);
+    this.foodList.create(CONFIG.WORLD.FOOD_COUNT);
+    _.forEach(this.foodList, (f) => {
+      this.render(f);
+    });
 
     this.pheromoneList = new PheromoneList();
+    this.pheromoneList.render = this.render.bind(this);
+    this.pheromoneList.destroy = this.destroy.bind(this);
 
     this.ants = [];
+    for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
+      let ant: Ant = new Ant(this.antHill.getPosition(), CONFIG.ANT.RADIUS, this);
+      ant.render = this.render.bind(this);
+      this.ants.push(ant);
+    }
+  }
+
+  start () {
+    let ants = this.ants;
+    let antIndex = this.ants.length - 1;
     let antCreationInterval: number = setInterval(() => {
       /** TODO ant list */
-      this.ants.push(new Ant(this.antHill.getPosition(), CONFIG.ANT.RADIUS));
+      ants[antIndex].leaveAntHill();
 
-      if (this.ants.length === CONFIG.WORLD.ANT_COUNT) {
+      if (antIndex === 0) {
         clearInterval(antCreationInterval);
       }
+
+      antIndex--;
     }, CONFIG.WORLD.ANT_CREATION_INTERVAL);
 
-    this.previousElements = [];
   }
-
-  step () {
-    this.ants.forEach((ant: Ant) => ant.step(this));
-    this.pheromoneList.dissipate();
-  }
-
-  /**
-   * @deprecated
-   */
-  elements () {
-    // Note: a bit of a work-around here.
-    // `FoodList` and `PheromoneList` are both extension of the `Array` class.
-    // Extending native interfaces seems to be a problem in ES5 (which is our current target).
-    // Perhaps we need to work on getting TypeScript to generate ES2015 (ES6) instead,
-    // but it seems like Browserify doesn't work with ES2015. Oh lordy!
-    let elements: Array<Entity> = [...this.ants, this.antHill, ...[...this.foodList], ...[...this.pheromoneList]];
-
-    let updated: Array<Entity> = elements;
-    let deleted: Array<Entity> = _.difference(this.previousElements, elements);
-
-    this.previousElements = elements;
-
-    return { updated, deleted };
-
-    // return elements;
-  }
-
-  /**
-   * @deprecated
-   */
-  destroy () { }
 }

@@ -4,34 +4,34 @@ import * as PIXI from 'pixi.js';
 import { World } from '../../core/scripts/World';
 
 import { View } from './common/View';
-import { Controller } from './common/Controller';
 
 export class Main {
   public world: World;
   public view: View;
-  public controller: Controller;
   public started: boolean;
 
   constructor() {
-    this.init();
+    // this.init();
+
     $('#startAnts').click(this.start.bind(this));
   }
 
   init () {
-    this.world = new World();
-    this.world.start();
+    this.view = new View('ants');
 
-    this.view = new View('ants', 1);
-    this.controller = new Controller(this.world, this.view, 30);
+    this.world = new World();
+    this.world.render = this.view.draw.bind(this.view);
+    this.world.destroy = this.view.remove.bind(this.view);
+    this.world.init();
+    this.world.start();
   }
 
   start () {
     if (this.started) {
-      this.controller.destroy();
-      this.init();
+      this.view.destroy();
     }
 
-    this.controller.start();
+    this.init();
     this.started = true;
   }
 }
