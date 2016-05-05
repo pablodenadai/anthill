@@ -4,7 +4,7 @@
 
 > A naive ant colony simulation.
 
-*This project was __heavily__ influenced by [andreasjansson/ants_simulation](https://github.com/andreasjansson/ants_simulation).*
+*This project was influenced by [andreasjansson/ants_simulation](https://github.com/andreasjansson/ants_simulation). and [Ants](http://www.enviee.com/joel/ants/) by Joel Schulbach [[Reddit thread](https://www.reddit.com/r/javascript/comments/2r6gzk/javascript_canvas_ant_simulator/)]*
 
 ## How it works
 
@@ -56,11 +56,6 @@ There are a few other small rules like an ant won't turn left or right too many 
 
 ## TODO
 
-#### Known Issues
-- Ants get stuck in pheromone
-- Ants should always leave pheromone track
-- Ants should follow pheromone back to anthill
-
 #### Features
 - Immutables + Redux + RxJS
 - Hooks/Events
@@ -72,14 +67,16 @@ There are a few other small rules like an ant won't turn left or right too many 
 - Pheromone amount instead of steps limit
 - consistency
 
-- review staying on trail
-- review turning back
 - left or right on pher depending on if carrying food or not
-- remove food
-- create, update, destroy events
 - pheromone rewrite - curve/line? grid?
+- Energy + death
+- antmill
 
 - NO foods amounst instead of new elements
+- DONE review staying on trail
+- DONE review turning back
+- DONE remove food
+- DONE create, update, destroy events
 - DONE remove dom els
 - DONE food spread ? multiply ?
 - DONE food list and pheromone list

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "build",
     "module": "commonjs",
+    "moduleResolution": "node",
     "sourceMap": true
   },
   "exclude": [
@@ -15,19 +16,19 @@
   ],
   "files": [
     "core/scripts/Ant.ts",
+    "core/scripts/AntCollection.ts",
     "core/scripts/AntHill.ts",
+    "core/scripts/common/Collection.ts",
     "core/scripts/common/Entity.ts",
+    "core/scripts/common/Events.ts",
     "core/scripts/common/Rectangle.ts",
     "core/scripts/common/Vector.ts",
     "core/scripts/Config.ts",
     "core/scripts/Food.ts",
-    "core/scripts/FoodFactory.ts",
-    "core/scripts/FoodList.ts",
+    "core/scripts/FoodCollection.ts",
     "core/scripts/Pheromone.ts",
-    "core/scripts/PheromoneList.ts",
+    "core/scripts/PheromoneCollection.ts",
     "core/scripts/World.ts",
-    "client/scripts/common/Controller.ts",
-    "client/scripts/common/Timer.ts",
     "client/scripts/common/View.ts",
     "client/scripts/Main.ts",
     "typings/browser.d.ts"

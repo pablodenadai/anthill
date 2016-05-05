@@ -1,70 +1,59 @@
-import { Entity } from './common/Entity';
-import { Rectangle } from './common/Rectangle';
-import { Vector } from './common/Vector';
+import { EventEmitter } from 'fbemitter';
 
-import { Ant } from './Ant';
+import { Entity } from './common/Entity';
+import { Events } from './common/Events';
+import { Rectangle } from './common/Rectangle';
+import { Collection } from './common/Collection';
+
 import { AntHill } from './AntHill';
-import { FoodList } from './FoodList';
-import { PheromoneList } from './PheromoneList';
+import { AntCollection } from './AntCollection';
+import { FoodCollection } from './FoodCollection';
+import { PheromoneCollection } from './PheromoneCollection';
 
 import { CONFIG } from './Config';
 
 export class World {
   public rectangle: Rectangle;
 
-  public ants: Array<Ant>;
   public antHill: AntHill;
-  public foodList: FoodList;
-  public pheromoneList: PheromoneList;
+  public foodCollection: FoodCollection;
+  public pheromoneCollection: PheromoneCollection;
+  public antCollection: AntCollection;
 
-  // public previousElements: Array<Entity>;
-
-  public render: Function;
-  public destroy: Function;
+  public emitter: EventEmitter;
 
   constructor () {
     this.rectangle = CONFIG.WORLD.RECTANGLE;
+    this.emitter = new EventEmitter();
+
+    this.antHill = new AntHill();
+    this.foodCollection = new FoodCollection();
+    this.pheromoneCollection = new PheromoneCollection();
+    this.antCollection = new AntCollection(
+      this.antHill,
+      this.foodCollection,
+      this.pheromoneCollection
+    );
+
+    this.bindEvents([
+      this.antCollection,
+      this.foodCollection,
+      this.pheromoneCollection
+    ]);
   };
 
-  init() {
-    this.antHill = new AntHill(
-      CONFIG.ANTHILL.POSITION,
-      CONFIG.ANTHILL.RADIUS
-    );
-    this.render(this.antHill);
-
-    this.foodList = new FoodList();
-    this.foodList.render = this.render.bind(this);
-    this.foodList.create(CONFIG.WORLD.FOOD_COUNT);
-    _.forEach(this.foodList, (f) => {
-      this.render(f);
+  bindEvents (collections: Array<Collection>) {
+    _.forEach(collections, (collection: Collection) => {
+      collection.emitter.addListener(Events.Create, (entity: Entity) => this.emitter.emit(Events.Create, entity));
+      collection.emitter.addListener(Events.Update, (entity: Entity) => this.emitter.emit(Events.Update, entity));
+      collection.emitter.addListener(Events.Delete, (entity: Entity) => this.emitter.emit(Events.Delete, entity));
     });
-
-    this.pheromoneList = new PheromoneList();
-    this.pheromoneList.render = this.render.bind(this);
-    this.pheromoneList.destroy = this.destroy.bind(this);
-
-    this.ants = [];
-    for (let i = 0; i < CONFIG.WORLD.ANT_COUNT; i++) {
-      let ant: Ant = new Ant(this.antHill.getPosition(), CONFIG.ANT.RADIUS, this);
-      ant.render = this.render.bind(this);
-      this.ants.push(ant);
-    }
   }
 
   start () {
-    let ants = this.ants;
-    let antIndex = this.ants.length - 1;
-    let antCreationInterval: number = setInterval(() => {
-      /** TODO ant list */
-      ants[antIndex].leaveAntHill();
+    this.emitter.emit(Events.Create, this.antHill);
 
-      if (antIndex === 0) {
-        clearInterval(antCreationInterval);
-      }
-
-      antIndex--;
-    }, CONFIG.WORLD.ANT_CREATION_INTERVAL);
-
+    this.foodCollection.create();
+    this.antCollection.create();
   }
 }

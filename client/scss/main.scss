@@ -1,12 +1,20 @@
-#ants {
-  width: 500px;
-  height: 250px;
+@-webkit-keyframes pheromoneFadeOut {
+  0%   { opacity: .5; }
+  100% { opacity: 0; }
+}
 
-  div {
-  	position: absolute;
-    border-radius: 100px;
-    // -webkit-transition: all ease;
-    // transition: all ease;
+svg {
+  circle {
     transform: translate(-50%, -50%);
+
+    &.pheromone {
+      -webkit-animation: pheromoneFadeOut 50s;
+      animation: pheromoneFadeOut 50s;
+
+      &.stronger {
+        -webkit-animation-duration: 100s;
+        animation-duration: 100s;
+      }
+    }
   }
 }

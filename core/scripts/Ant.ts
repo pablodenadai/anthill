@@ -1,9 +1,11 @@
 import { Entity } from './common/Entity';
 import { Vector } from './common/Vector';
+import { Rectangle } from './common/Rectangle';
 
 import { Food } from './Food';
+import { FoodCollection } from './FoodCollection';
 import { Pheromone } from './Pheromone';
-import { PheromoneList } from './PheromoneList';
+import { PheromoneCollection } from './PheromoneCollection';
 import { AntHill } from './AntHill';
 import { World } from './World';
 
@@ -16,7 +18,15 @@ export class Ant extends Entity {
 
   private stepInterval: number;
 
-  constructor (protected position: Vector, protected radius: number, private world: World) {
+  constructor (
+    private antHill: AntHill,
+    private foodCollection: FoodCollection,
+    private pheromoneCollection: PheromoneCollection,
+
+    protected position: Vector = CONFIG.ANTHILL.POSITION,
+    protected radius: number = CONFIG.ANT.RADIUS,
+    protected rectangle: Rectangle = CONFIG.WORLD.RECTANGLE
+  ) {
     super(position, radius);
 
     this.direction = Vector.randomUnitVector();
@@ -24,15 +34,16 @@ export class Ant extends Entity {
   }
 
   leaveAntHill () {
+    this.step();
     this.stepInterval = setInterval(this.step.bind(this), 100);
   }
 
-  isAtAntHill (antHill: AntHill): boolean {
-    return antHill.isAt(this.getPosition(), this.radius);
+  isAtAntHill (): boolean {
+    return this.antHill.isAt(this);
   }
 
-  isOnPheromone (pheromoneList: PheromoneList) {
-    let pheromone: Pheromone = pheromoneList.find(this.getPosition());
+  isOnPheromone () {
+    let pheromone: Pheromone = this.pheromoneCollection.findOneAt(this);
     return !!pheromone;
   }
 
@@ -44,11 +55,11 @@ export class Ant extends Entity {
     this.pheromoneLimit = CONFIG.ANT.PHEROMONE_LIMIT;
   }
 
-  releasePheromone (pheromoneList: PheromoneList) {
+  releasePheromone () {
     if (!this.canReleasePheromone()) return;
     this.pheromoneLimit--;
-    let multiplier: number = this.isCarryingFood() ? CONFIG.ANT.PHEROMONE_MULTIPLIER : 1;
-    return pheromoneList.add(this.getPosition(), multiplier);
+    let stronger: boolean = this.isCarryingFood();
+    return this.pheromoneCollection.create(this.position.subtract(this.direction.multiply(this.radius)), stronger);
   }
 
   isCarryingFood (): boolean {
@@ -75,11 +86,9 @@ export class Ant extends Entity {
     return food;
   }
 
-  canTurnRationally (world: World): boolean {
-    let rationality: number =
-      this.isOnPheromone(world.pheromoneList) ?
-        this.isCarryingFood() ? 1 :
-        CONFIG.ANT.RATIONALITY_ON_PHEROMONE :
+  canTurnRationally (): boolean {
+    let rationality: number = this.isOnPheromone() ? this.isCarryingFood() ? 1 :
+      CONFIG.ANT.RATIONALITY_ON_PHEROMONE :
       CONFIG.ANT.RATIONALITY;
 
     return Math.random() < rationality;
@@ -94,55 +103,54 @@ export class Ant extends Entity {
     return Vector.null.subtract(direction);
   }
 
+  getPheromoesUnderAntenna (antennaPoint: Entity): { direction: Vector, strength: number } {
+    let direction: Vector;
+    let strength: number = 0;
+
+    let pheromonesUnderAntenna: Array<Pheromone> = this.pheromoneCollection.findAnyAt(antennaPoint);
+    if (pheromonesUnderAntenna.length) {
+      let vectors: Array<Vector> = pheromonesUnderAntenna.map((p: Pheromone) => p.getPosition() );
+
+      direction = this.position.meanDirectionTo(vectors);
+      strength = pheromonesUnderAntenna.reduce((x: number, v: Pheromone) => x + v.strength, 0);
+    }
+
+    return { direction, strength };
+  };
+
   /**
   * Sense a pheromone in an arc of 3/8 * pi radians in direction, right in front of the ant.
   * Returns the direction of the found pheromone, as a vector, or null if none were found ? TODO.
   * If there are more than one, return the direction of the strongest.
   */
-  directionToPheromone (pheromoneList: PheromoneList, direction: Vector): Vector {
-    let strongestDirection: number = 0;
-    let strongestStrength: number = 0;
+  directionToPheromone (direction: Vector): Vector {
+    let antennaLength: number = this.radius + 1;
+    let antennaRadius: number = 1;
 
-    let forward = direction.toRadians();
-    let left = forward - Math.PI / 5;
-    let right = forward + Math.PI / 5;
+    let forward: number = direction.toRadians();
+    let left: Vector = Vector.fromRadians(forward - Math.PI / 8, antennaLength);
+    let right: Vector = Vector.fromRadians(forward + Math.PI / 8, antennaLength);
 
-    [left, right].forEach((radians: number) => {
-      let antennaDirection: Vector = Vector.fromRadians(radians, this.radius + 2);
-      let antennaPoint: Vector = this.position.add(antennaDirection);
+    let antennaLeft: Entity = new Entity(this.position.add(left), antennaRadius);
+    let antennaRight: Entity = new Entity(this.position.add(right), antennaRadius);
 
-      let pheromonesUnderAntenna: Array<Pheromone> = pheromoneList.filterP(antennaPoint, 1);
-      if (pheromonesUnderAntenna.length) {
-        // debugger;
-        let vectors: Array<Vector> = pheromonesUnderAntenna.map((p: Pheromone) => p.getPosition() );
-        let strength: number = pheromoneList.reduce((x: number, v: Pheromone) => x + v.strength, 0);
+    let pheromonesLeft = this.getPheromoesUnderAntenna(antennaLeft);
+    let pheromonesRight = this.getPheromoesUnderAntenna(antennaRight);
 
-        // if (this.isCarryingFood()) {
-        //   if (strength > 0 && strength < strongestStrength) {
-        //     strongestStrength = strength;
-        //     strongestDirection = this.position.meanDirectionTo(vectors).toRadians();
-        //   }
-        // } else {
-          if (strength > strongestStrength) {
-            strongestStrength = strength;
-            strongestDirection = this.position.meanDirectionTo(vectors).toRadians();
-          // }
-        }
-      }
-    });
-
-    if (strongestStrength) {
-      return Vector.fromRadians(strongestDirection);
+    // If can't detect pheromone or both strength are the same
+    if (pheromonesLeft.strength === pheromonesRight.strength) {
+      return null;
     }
 
-    return null;
+    return pheromonesLeft.strength > pheromonesRight.strength ?
+      pheromonesLeft.direction : pheromonesRight.direction;
   }
 
   setPosition (newDirection: Vector) {
     let stepSize = 2;
-    let redirectTries: number = 5;
 
-    while (!this.world.rectangle.contains(this.position.add(newDirection.multiply(stepSize))) && redirectTries > 0) {
+    let redirectTries: number = 5;
+    while (!this.rectangle.contains(this.position.add(newDirection.multiply(stepSize))) && redirectTries > 0) {
       newDirection = Vector.randomUnitVector();
       redirectTries--;
       if (!redirectTries) {
@@ -162,24 +170,24 @@ export class Ant extends Entity {
 
   getNewDirection (): Vector {
     if (this.isCarryingFood()) {
-      if (this.isAtAntHill(this.world.antHill)) {
-        this.world.foodList.remove(this.dropFood());
+      if (this.isAtAntHill()) {
+        this.foodCollection.delete(this.dropFood());
+        this.resetPheromoneLimit();
+        return this.oppositeDirection(this.direction);
+      }
+    } else {
+      let food = this.foodCollection.findOneAt(this);
+      if (food) {
+        this.pickUpFood(food);
         this.resetPheromoneLimit();
         return this.oppositeDirection(this.direction);
       }
     }
 
-    let food = this.world.foodList.find(this.position, this.radius);
-    if (food) {
-      this.pickUpFood(food);
-      this.resetPheromoneLimit();
-      return this.oppositeDirection(this.direction);
-    }
-
     let newDirection: Vector = this.direction;
 
-    if (this.canTurnRationally(this.world)) {
-      let pheromoneDirection = this.directionToPheromone(this.world.pheromoneList, this.direction);
+    if (this.canTurnRationally()) {
+      let pheromoneDirection = this.directionToPheromone(this.direction);
       if (pheromoneDirection) {
         newDirection = pheromoneDirection;
       }
@@ -192,17 +200,7 @@ export class Ant extends Entity {
 
   step () {
     let newDirection: Vector = this.getNewDirection();
-    this.releasePheromone(this.world.pheromoneList);
+    this.releasePheromone();
     this.setPosition(newDirection);
-  }
-
-  /** @deprecated */
-  getColour () {
-  	return 'rgb(0, 0, 0)';
-  }
-
-  /** @deprecated */
-  getZIndex () {
-  	return 5;
   }
 }

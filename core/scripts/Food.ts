@@ -12,18 +12,4 @@ export class Food extends Entity {
 
     this.isOnGround = true;
   }
-
-  /**
-   * @deprecated
-   */
-  getColour () {
-  	return 'rgb(0, 255, 0)';
-  }
-
-  /**
-   * @deprecated
-   */
-  getZIndex () {
-  	return 7;
-  }
 }
